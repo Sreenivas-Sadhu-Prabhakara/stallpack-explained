@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'none'; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'">
+  <title>stallpack explained — how the market stall inventory tracker works</title>
+  <meta name="description" content="How stallpack, the market stall &amp; craft fair inventory tracker, turns two physical counts into sold units, expected cash and variance — an animated walkthrough of the arithmetic and the enforced privacy.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="canonical" href="https://sreenivas-sadhu-prabhakara.github.io/stallpack-explained/">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="author" content="Sreenivas Sadhu Prabhakara">
+  <meta name="keywords" content="how stallpack works, market stall inventory tracker, craft fair inventory, stock reconciliation, pack out count back, cash variance explained, street market vendor app, haat vendor, offline inventory app, sell-through">
+  <meta name="theme-color" content="#1E2630" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#F5F3EE" media="(prefers-color-scheme: light)">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="stallpack explained">
+  <meta property="og:title" content="stallpack explained — how the market stall inventory tracker works">
+  <meta property="og:description" content="Two physical counts. Three lines of arithmetic. An animated walkthrough of how stallpack reconciles a market day — and why your sales data cannot leave the browser.">
+  <meta property="og:url" content="https://sreenivas-sadhu-prabhakara.github.io/stallpack-explained/">
+  <meta property="og:locale" content="en_IN">
+  <meta property="og:image" content="https://sreenivas-sadhu-prabhakara.github.io/stallpack-explained/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="stallpack explained — two counts in, a reconciled day out">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="stallpack explained — how the market stall inventory tracker works">
+  <meta name="twitter:description" content="Two physical counts. Three lines of arithmetic. How stallpack reconciles a market day — and why your sales data cannot leave the browser.">
+  <meta name="twitter:image" content="https://sreenivas-sadhu-prabhakara.github.io/stallpack-explained/og-image.png">
+  <meta name="twitter:image:alt" content="stallpack explained — two counts in, a reconciled day out">
+
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <!-- Structured data (data blocks; not executable script) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "stallpack explained",
+    "description": "An animated explainer for stallpack, the free market stall and craft fair inventory tracker: how two physical counts become sold units, expected takings and cash variance, and how a strict Content-Security-Policy keeps every figure in the vendor's own browser.",
+    "url": "https://sreenivas-sadhu-prabhakara.github.io/stallpack-explained/",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Any (modern web browser)",
+    "browserRequirements": "Requires a modern web browser with JavaScript enabled.",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
+    "license": "https://opensource.org/licenses/MIT",
+    "author": { "@type": "Person", "name": "Sreenivas Sadhu Prabhakara" },
+    "softwareVersion": "0.1.0",
+    "featureList": [
+      "Animated walkthrough of the two-count reconciliation",
+      "Interactive one-item demo in exact integer paise",
+      "Plain-language explanation of the connect-src 'none' privacy guarantee",
+      "Feature tour of the live stallpack app",
+      "Honest-limits section: variance is arithmetic, not theft detection",
+      "Works fully offline; no account, no tracking"
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is stallpack and who is it for?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "stallpack is a free market stall and craft fair inventory tracker for weekly-haat and street-market vendors, flea-market, craft-fair and pop-up sellers. You count what you carry out in the morning and what comes back in the evening; the app computes sold units, expected takings and cash variance from those two counts."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does the two-count reconciliation work?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Three lines of arithmetic, all in exact integer paise: sold = carried − returned per item; expected takings = the sum of sold × list price; variance = (cash in box + digital payments) − expected. A miscount at either end shows up as variance — the app cannot tell which count was wrong."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does stallpack send my sales data anywhere?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No — and not just as a promise. The page ships a Content-Security-Policy with connect-src 'none', which makes the browser itself block every network request the page could attempt. There is no server, no account and no analytics; everything lives in your browser's localStorage, and CSV export is the only way data leaves the app."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is the variance figure a theft detector?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Variance is pure arithmetic: actual takings minus expected takings at list price. Discounts, haggling, freebies, breakage, miscounts and theft are indistinguishable in it, and the app's verdict band says so explicitly and never accuses anyone."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="awning" aria-hidden="true"></div>
+  <div class="awning-edge" aria-hidden="true"></div>
+
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="topbar">
+        <div class="brand">
+          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="7" fill="#28313D"/>
+            <path d="M5 6h22v5a3.67 3.67 0 0 1-7.33 0 3.67 3.67 0 0 1-7.34 0A3.67 3.67 0 0 1 5 11z" fill="#D2601A"/>
+            <g stroke="#F5F3EE" stroke-width="2" stroke-linecap="round">
+              <path d="M10 18v8"/><path d="M14 18v8"/><path d="M18 18v8"/><path d="M22 18v8"/>
+              <path d="M8 25.5 24 18.5"/>
+            </g>
+          </svg>
+          <span class="brand-name">stallpack <em>explained</em></span>
+        </div>
+        <button type="button" id="theme-toggle" class="theme-toggle" aria-pressed="false">
+          <span class="theme-toggle-icon" aria-hidden="true">◐</span> Theme
+        </button>
+      </div>
+
+      <h1>Market stall inventory tracker, explained — how stallpack reconciles a whole market day from two counts</h1>
+      <p class="lede">
+        No POS, no per-sale tapping, no spreadsheet at midnight. You count your stock twice —
+        once going out, once coming back — and sold units, expected cash and variance
+        <strong>fall out of the arithmetic</strong>. This page walks through exactly how,
+        with the same numbers the app computes.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="https://sreenivas-sadhu-prabhakara.github.io/stallpack/">Open stallpack — it's free</a>
+        <a class="btn btn-ghost" href="#how">See how it works ↓</a>
+      </div>
+      <ul class="hero-chips">
+        <li>two counts, no POS</li>
+        <li>exact integer paise</li>
+        <li>offline &amp; private by enforcement</li>
+        <li>free, MIT-licensed</li>
+      </ul>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ============ THE PROBLEM ============ -->
+    <section class="section" id="problem" aria-labelledby="problem-h">
+      <div class="section-inner">
+        <span class="scallop-divider" aria-hidden="true"></span>
+        <h2 id="problem-h">The 9&nbsp;pm problem every stall seller knows</h2>
+        <div class="prose">
+          <p>
+            The market closes. You're tired, the light is going, the crates are half-packed —
+            and one question hangs over the cash box: <strong>does the money match the stock?</strong>
+          </p>
+          <p>
+            Most vendors answer it one of three ways: they don't (and hope), they tap every sale
+            into a POS app all day (and miss sales while tapping), or they rebuild the day in a
+            spreadsheet at midnight. The "craft fair inventory spreadsheet" is a whole genre for a reason.
+          </p>
+          <p>
+            stallpack takes a fourth path, the one market sellers already half-do by hand:
+            <strong>count twice, and let subtraction do the rest.</strong>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ HOW IT WORKS — ANIMATED ============ -->
+    <section class="section section-alt" id="how" aria-labelledby="how-h">
+      <div class="section-inner">
+        <span class="scallop-divider" aria-hidden="true"></span>
+        <h2 id="how-h">How it works: one day at the Tuesday haat</h2>
+        <p class="section-lede">A real worked example — the same fixture the app's self-tests prove, to the paisa.</p>
+
+        <!-- Stage 1: morning -->
+        <article class="stage anim" aria-labelledby="stage1-h">
+          <div class="stage-copy">
+            <p class="stage-kicker"><span class="stage-num">1</span> Morning · under the awning, going out</p>
+            <h3 id="stage1-h">Pack out: list what you carry</h3>
+            <p>Item, quantity, unit price — that's the whole morning count. One tap copies your
+            last day at this market, so a regular Tuesday takes seconds.</p>
+          </div>
+          <figure class="stage-fig">
+            <figcaption class="fig-title">Carried out</figcaption>
+            <div class="tally-rows">
+              <div class="trow s1">
+                <span class="tname">Glass bangles <small>₹50</small></span>
+                <span class="tbar"><span class="bar bar-carried w100"></span></span>
+                <span class="tnum num">30</span>
+              </div>
+              <div class="trow s2">
+                <span class="tname">Jhumka earrings <small>₹120</small></span>
+                <span class="tbar"><span class="bar bar-carried w80"></span></span>
+                <span class="tnum num">24</span>
+              </div>
+              <div class="trow s3">
+                <span class="tname">Cotton scarves <small>₹35</small></span>
+                <span class="tbar"><span class="bar bar-carried w33"></span></span>
+                <span class="tnum num">10</span>
+              </div>
+            </div>
+          </figure>
+        </article>
+
+        <!-- Stage 2: evening -->
+        <article class="stage anim" aria-labelledby="stage2-h">
+          <div class="stage-copy">
+            <p class="stage-kicker"><span class="stage-num">2</span> Evening · under the awning, coming back</p>
+            <h3 id="stage2-h">Count back: the 90-second return count</h3>
+            <p>The morning list reappears with big +/− steppers and a one-tap
+            <em>Sold out</em>. Anything you don't touch defaults conservatively to
+            <em>returned&nbsp;=&nbsp;carried</em> — zero sold, never an invented sale.</p>
+          </div>
+          <figure class="stage-fig">
+            <figcaption class="fig-title">Came back <span class="legend"><i class="sw sw-carried"></i> carried <i class="sw sw-returned"></i> returned</span></figcaption>
+            <div class="tally-rows">
+              <div class="trow s1">
+                <span class="tname">Glass bangles</span>
+                <span class="tbar"><span class="bar bar-carried w100"></span><span class="bar bar-returned w40"></span></span>
+                <span class="tnum num">12 <small>of 30</small></span>
+              </div>
+              <div class="trow s2">
+                <span class="tname">Jhumka earrings</span>
+                <span class="tbar"><span class="bar bar-carried w80"></span><span class="bar bar-returned w30"></span></span>
+                <span class="tnum num">9 <small>of 24</small></span>
+              </div>
+              <div class="trow s3">
+                <span class="tname">Cotton scarves</span>
+                <span class="tbar"><span class="bar bar-carried w33"></span><span class="bar bar-returned w33"></span></span>
+                <span class="tnum num">10 <small>of 10</small></span>
+              </div>
+            </div>
+          </figure>
+        </article>
+
+        <!-- Stage 3: subtraction -->
+        <article class="stage anim" aria-labelledby="stage3-h">
+          <div class="stage-copy">
+            <p class="stage-kicker"><span class="stage-num">3</span> No typing — just subtraction</p>
+            <h3 id="stage3-h">Sold = carried − returned, expected = sold × price</h3>
+            <p>Every rupee is computed in <strong>exact integer paise</strong> — no floating-point
+            drift, ever. The orange segment is your day: what left the crate and never came back.</p>
+          </div>
+          <figure class="stage-fig">
+            <figcaption class="fig-title">Sold &amp; expected takings <span class="legend"><i class="sw sw-sold"></i> sold</span></figcaption>
+            <div class="tally-rows">
+              <div class="trow s1">
+                <span class="tname">Glass bangles</span>
+                <span class="tbar"><span class="bar bar-returned dim w40"></span><span class="bar bar-sold l40 w60"></span></span>
+                <span class="tnum num">18 × ₹50 = <strong>₹900.00</strong></span>
+              </div>
+              <div class="trow s2">
+                <span class="tname">Jhumka earrings</span>
+                <span class="tbar"><span class="bar bar-returned dim w30"></span><span class="bar bar-sold l30 w50"></span></span>
+                <span class="tnum num">15 × ₹120 = <strong>₹1,800.00</strong></span>
+              </div>
+              <div class="trow s3">
+                <span class="tname">Cotton scarves</span>
+                <span class="tbar"><span class="bar bar-returned dim w33"></span></span>
+                <span class="tnum num">0 × ₹35 = <strong>₹0.00</strong></span>
+              </div>
+              <div class="trow trow-total s4">
+                <span class="tname">Expected takings</span>
+                <span class="tbar"></span>
+                <span class="tnum num"><strong class="big">₹2,700.00</strong></span>
+              </div>
+            </div>
+          </figure>
+        </article>
+
+        <!-- Stage 4: variance -->
+        <article class="stage anim" aria-labelledby="stage4-h">
+          <div class="stage-copy">
+            <p class="stage-kicker"><span class="stage-num">4</span> The moment of truth</p>
+            <h3 id="stage4-h">Variance = what you hold − what you should hold</h3>
+            <p>Count the cash box, add one digital-payments total (UPI/card), and the day sheet
+            gives its verdict. Here: <strong>₹140 short</strong> — maybe a discount, maybe a
+            miscount. The band tells you <em>that</em>, never <em>who</em>.</p>
+          </div>
+          <figure class="stage-fig">
+            <figcaption class="fig-title">Day sheet</figcaption>
+            <div class="sheet">
+              <div class="srow s1"><span>Expected at list price</span><span class="num">₹2,700.00</span></div>
+              <div class="srow s2"><span>Cash in box</span><span class="num">₹2,100.00</span></div>
+              <div class="srow s3"><span>Digital (UPI/card)</span><span class="num">₹460.00</span></div>
+              <div class="verdict s4" role="note">
+                <span class="verdict-flag">▼ SHORT</span>
+                <span class="verdict-amt num">−₹140.00</span>
+              </div>
+              <p class="verdict-caption s5">Variance is arithmetic — discounts, haggling, freebies,
+              miscounts and loss all look the same here. <strong>This is not theft detection.</strong></p>
+            </div>
+          </figure>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ TRY IT ============ -->
+    <section class="section" id="try" aria-labelledby="try-h">
+      <div class="section-inner">
+        <span class="scallop-divider" aria-hidden="true"></span>
+        <h2 id="try-h">Try the arithmetic yourself</h2>
+        <p class="section-lede">One item, live. This demo runs the same integer-paise engine this page's
+        self-tests verify — nothing is saved, nothing is sent.</p>
+
+        <div class="demo card">
+          <div class="demo-grid">
+            <div class="demo-field">
+              <label for="d-carried">Carried out</label>
+              <div class="stepper">
+                <button type="button" class="step-btn" data-step="carried" data-delta="-1" aria-label="Decrease carried">−</button>
+                <output id="d-carried" class="num" aria-live="off">30</output>
+                <button type="button" class="step-btn" data-step="carried" data-delta="1" aria-label="Increase carried">+</button>
+              </div>
+            </div>
+            <div class="demo-field">
+              <label for="d-returned">Came back</label>
+              <div class="stepper">
+                <button type="button" class="step-btn" data-step="returned" data-delta="-1" aria-label="Decrease returned">−</button>
+                <output id="d-returned" class="num" aria-live="off">12</output>
+                <button type="button" class="step-btn" data-step="returned" data-delta="1" aria-label="Increase returned">+</button>
+              </div>
+            </div>
+            <div class="demo-field">
+              <label for="d-price">Unit price (₹)</label>
+              <input id="d-price" type="text" inputmode="decimal" value="50" autocomplete="off">
+            </div>
+            <div class="demo-field">
+              <label for="d-takings">Takings counted (₹)</label>
+              <input id="d-takings" type="text" inputmode="decimal" value="850" autocomplete="off">
+            </div>
+          </div>
+          <div class="demo-out" aria-live="polite">
+            <div class="demo-line"><span>Sold</span><strong id="o-sold" class="num">18</strong></div>
+            <div class="demo-line"><span>Expected</span><strong id="o-expected" class="num">₹900.00</strong></div>
+            <div class="demo-line demo-verdict" id="o-verdict-wrap">
+              <span>Variance</span><strong id="o-variance" class="num">−₹50.00 · short</strong>
+            </div>
+            <p class="demo-note" id="o-note">Returned can never exceed carried — the app clamps it, so a slip of the thumb can't invent sales.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PRIVACY ============ -->
+    <section class="section section-alt" id="privacy" aria-labelledby="privacy-h">
+      <div class="section-inner">
+        <span class="scallop-divider" aria-hidden="true"></span>
+        <h2 id="privacy-h">Privacy that is enforced, not promised</h2>
+        <p class="section-lede">Your takings are nobody's business. stallpack doesn't just <em>say</em> it
+        won't send your data — it ships a policy that makes the <strong>browser itself</strong> refuse to.</p>
+
+        <div class="privacy-wrap">
+          <figure class="privacy-fig anim" aria-labelledby="privacy-fig-cap">
+            <svg viewBox="0 0 560 240" role="img" aria-label="Diagram: a request from the stallpack page toward the internet is stopped at a wall labelled connect-src none; data stays in the browser's local storage.">
+              <!-- browser -->
+              <rect x="16" y="40" width="220" height="160" rx="14" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
+              <rect x="16" y="40" width="220" height="34" rx="14" fill="var(--surface2)" stroke="var(--line)" stroke-width="2"/>
+              <circle cx="40" cy="57" r="5" fill="var(--awning)"/>
+              <circle cx="58" cy="57" r="5" fill="var(--line)"/>
+              <circle cx="76" cy="57" r="5" fill="var(--line)"/>
+              <text x="126" y="106" class="svg-label" text-anchor="middle">your browser</text>
+              <rect x="46" y="124" width="160" height="52" rx="8" fill="var(--surface2)" stroke="var(--line)" stroke-width="1.5"/>
+              <text x="126" y="146" class="svg-small" text-anchor="middle">localStorage</text>
+              <text x="126" y="166" class="svg-small svg-strong" text-anchor="middle">stallpack.v1 ✓</text>
+              <!-- the attempted request -->
+              <g class="req">
+                <line x1="248" y1="120" x2="380" y2="120" stroke="var(--awning)" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 8" class="req-line"/>
+                <circle cx="380" cy="120" r="9" fill="var(--awning)" class="req-dot"/>
+              </g>
+              <!-- the CSP wall -->
+              <rect x="396" y="52" width="14" height="136" rx="4" fill="var(--danger)"/>
+              <text x="403" y="216" class="svg-small svg-strong" text-anchor="middle">connect-src 'none'</text>
+              <g class="blocked-x">
+                <line x1="386" y1="104" x2="418" y2="136" stroke="var(--danger)" stroke-width="5" stroke-linecap="round"/>
+                <line x1="418" y1="104" x2="386" y2="136" stroke="var(--danger)" stroke-width="5" stroke-linecap="round"/>
+              </g>
+              <!-- the internet, unreachable -->
+              <g class="cloud">
+                <ellipse cx="492" cy="118" rx="52" ry="30" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="6 6"/>
+                <text x="492" y="124" class="svg-small" text-anchor="middle">internet</text>
+              </g>
+            </svg>
+            <figcaption id="privacy-fig-cap" class="fig-caption">Every request the page could ever make — blocked before it leaves.</figcaption>
+          </figure>
+
+          <div class="prose">
+            <p>The page's <code>Content-Security-Policy</code> header includes:</p>
+            <pre class="csp-block"><code>default-src 'self'; <strong>connect-src 'none'</strong></code></pre>
+            <ul class="check-list">
+              <li><strong>No network calls possible</strong> — <code>fetch</code>, XHR and WebSockets are all refused by the browser, by policy.</li>
+              <li><strong>No server, no account, no analytics</strong> — there is nothing to log in to and nothing watching.</li>
+              <li><strong>localStorage only</strong> — your markets, items and cash figures live in your browser under one key.</li>
+              <li><strong>CSV export is the only exit</strong> — a file you download on purpose; it's also your only backup, so export regularly.</li>
+            </ul>
+            <p class="fineprint">The honest flip side: clearing site data or switching devices loses your history. There is no cloud copy — by design.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FEATURES ============ -->
+    <section class="section" id="features" aria-labelledby="features-h">
+      <div class="section-inner">
+        <span class="scallop-divider" aria-hidden="true"></span>
+        <h2 id="features-h">What's in the app</h2>
+        <div class="feature-grid">
+          <article class="card feat">
+            <h3>Markets directory</h3>
+            <p>Name your recurring markets — "Tuesday haat", "Sunday craft fair". Every day record is tagged to one, so history compares like with like.</p>
+          </article>
+          <article class="card feat">
+            <h3>Copy last day</h3>
+            <p>One tap pre-fills today's pack list from your last day at that market. Regulars pack out in seconds.</p>
+          </article>
+          <article class="card feat">
+            <h3>90-second return count</h3>
+            <p>Big steppers, one-tap "Sold out", a progress strip — and untouched items default to zero sold, never a guess.</p>
+          </article>
+          <article class="card feat">
+            <h3>Per-market history</h3>
+            <p>Sold-per-day, sell-through %, and a "best day sold N" badge used as the suggested pack quantity next time. A history lookup — not forecasting, and no AI anywhere.</p>
+          </article>
+          <article class="card feat">
+            <h3>Print &amp; CSV</h3>
+            <p>A pack checklist to tick while loading, a printable day sheet, and RFC 4180 CSV export — the one way data leaves, and your backup.</p>
+          </article>
+          <article class="card feat">
+            <h3>Money done right</h3>
+            <p>Integer paise everywhere, Indian digit grouping (₹1,23,456.75), display-only $/€/£ option, prices validated to 2 decimals.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ HONEST LIMITS ============ -->
+    <section class="section section-alt" id="limits" aria-labelledby="limits-h">
+      <div class="section-inner">
+        <span class="scallop-divider" aria-hidden="true"></span>
+        <h2 id="limits-h">What stallpack honestly is not</h2>
+        <ul class="limits-list">
+          <li><strong>Not theft detection.</strong> Variance is takings − expected at list price; discounts, haggling, freebies, breakage, miscounts and theft are indistinguishable in it.</li>
+          <li><strong>Not a POS.</strong> Deliberately a two-count tool — no per-sale entry, no barcode catalog, no payment-app integration, no multi-device sync.</li>
+          <li><strong>Not a forecaster.</strong> The pack suggestion is "your best day sold N at this market" — a simple lookup, with no AI involved.</li>
+          <li><strong>Only as good as your counts.</strong> A miscount at either end shows up as variance, and the app cannot tell which count was wrong.</li>
+          <li><strong>Expected assumes list prices.</strong> If you routinely haggle, variance will run negative — that's a fact worth seeing, not an error.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section class="section" id="faq" aria-labelledby="faq-h">
+      <div class="section-inner">
+        <span class="scallop-divider" aria-hidden="true"></span>
+        <h2 id="faq-h">Questions sellers ask</h2>
+        <details class="faq-item">
+          <summary>What is stallpack and who is it for?</summary>
+          <p>A free market stall &amp; craft fair inventory tracker for weekly-haat and street-market vendors, flea-market, craft-fair and pop-up sellers. You count going out and coming back; the app computes sold, expected takings and variance from those two counts.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How does the two-count reconciliation work?</summary>
+          <p>Three lines of arithmetic in exact integer paise: sold = carried − returned per item; expected = Σ sold × list price; variance = (cash + digital payments) − expected. A miscount at either end shows up as variance.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Does stallpack send my sales data anywhere?</summary>
+          <p>No — and it can't. The page's Content-Security-Policy sets <code>connect-src 'none'</code>, so the browser itself blocks every network request. No server, no account, no analytics; localStorage only, CSV export the only exit.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Is the variance figure a theft detector?</summary>
+          <p>No. It's pure arithmetic, and the verdict band says so explicitly — discounts, haggling, freebies, breakage, miscounts and theft all look identical in it. It never accuses.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- ============ CTA ============ -->
+    <section class="section cta-section" id="cta" aria-labelledby="cta-h">
+      <div class="section-inner cta-inner">
+        <h2 id="cta-h">Two counts. One honest day sheet.</h2>
+        <p>Free, offline, MIT-licensed. Works on the phone already in your pocket — even with no signal at the market.</p>
+        <a class="btn btn-primary btn-big" href="https://sreenivas-sadhu-prabhakara.github.io/stallpack/">Open stallpack →</a>
+        <p class="cta-sub"><a href="https://github.com/Sreenivas-Sadhu-Prabhakara/stallpack">Source code on GitHub</a></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="section-inner">
+      <div class="awning-mini" aria-hidden="true"></div>
+      <p><strong>Disclaimer.</strong> This explainer and the stallpack app are record-keeping aids provided
+      "as is", without warranty of any kind. stallpack is not accounting, tax, or professional business
+      advice, and its figures are only as accurate as the counts and amounts entered. Verify important
+      numbers yourself. The author accepts no liability for decisions made using these tools.</p>
+      <p>All numbers on this page run in your browser; this page makes no network requests
+      (<code>connect-src 'none'</code>) and stores only your theme choice locally.</p>
+      <p><a href="https://sreenivas-sadhu-prabhakara.github.io/stallpack/">stallpack app</a> ·
+        <a href="https://github.com/Sreenivas-Sadhu-Prabhakara/stallpack-explained">this page's source</a> ·
+        MIT License © 2026 Sreenivas Sadhu Prabhakara</p>
+    </div>
+  </footer>
+
+  <script src="data/reconcile.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  :root {
+    --bg: #1E2630;
+    --surface: #323C49;
+    --surface2: #28313D;
+    --line: #46525F;
+    --chalk: #F5F3EE;
+    --mist: #AAB4BF;
+    --awning: #D2601A;
+    --awning2: #A34710;
+    --warm: #F0A26B;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    position: relative;
+    background: linear-gradient(180deg, #1a2129 0%, #1E2630 100%);
+    font-family: var(--sans);
+    color: var(--chalk);
+    -webkit-font-smoothing: antialiased;
+  }
+  /* the scalloped stall awning — the stallpack family signature */
+  .awning {
+    height: 46px;
+    background: repeating-linear-gradient(90deg, var(--awning) 0 60px, var(--awning2) 60px 120px);
+  }
+  .awning-edge {
+    height: 24px;
+    background-image: radial-gradient(circle at 50% 0, var(--awning) 66%, transparent 69%);
+    background-size: 60px 24px;
+    background-repeat: repeat-x;
+  }
+  .frame {
+    position: absolute; inset: 70px 0 0 0;
+    padding: 42px 80px 58px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .brand { display: flex; align-items: center; gap: 20px; }
+  .mark { width: 72px; height: 72px; border-radius: 18px; }
+  .wordmark { font-size: 54px; font-weight: 800; letter-spacing: -0.035em; }
+  .wordmark em { font-style: normal; font-weight: 650; color: var(--warm); }
+  .cols { display: flex; align-items: center; gap: 52px; }
+  .headline { flex: 1; }
+  .headline h1 {
+    font-size: 56px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.12;
+  }
+  .headline h1 .go { color: var(--awning); }
+  .headline p {
+    margin-top: 20px; font-size: 26px; font-weight: 500;
+    color: var(--mist); line-height: 1.38; max-width: 28ch;
+  }
+  /* the three-step flow — the explainer's own take on the family tally */
+  .flow { width: 420px; display: flex; flex-direction: column; gap: 0; }
+  .fcard {
+    background: var(--surface);
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 24px;
+    font-variant-numeric: tabular-nums;
+    box-shadow: 0 20px 48px -30px rgba(0,0,0,0.8);
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .fcard .k { font-size: 22px; font-weight: 650; color: var(--mist); }
+  .fcard .k b { color: var(--chalk); font-weight: 800; }
+  .fcard .v { font-size: 26px; font-weight: 800; color: var(--chalk); }
+  .arrow {
+    align-self: center; height: 26px; width: 4px; margin: 2px 0;
+    background: var(--awning); border-radius: 2px; position: relative;
+  }
+  .arrow::after {
+    content: ""; position: absolute; left: 50%; bottom: -2px;
+    width: 12px; height: 12px; border-right: 4px solid var(--awning);
+    border-bottom: 4px solid var(--awning);
+    transform: translateX(-50%) rotate(45deg); border-radius: 2px;
+  }
+  .fcard.verdict {
+    background: #4A3325; border: 2px solid var(--awning);
+  }
+  .fcard.verdict .k, .fcard.verdict .v { color: var(--warm); }
+  .chips { display: flex; gap: 13px; }
+  .chip {
+    border: 1.5px solid var(--line);
+    background: rgba(50,60,73,0.55);
+    border-radius: 999px;
+    padding: 11px 21px;
+    font-size: 22px; font-weight: 650; color: var(--mist);
+  }
+  .chip.hot { border-color: var(--awning); color: var(--warm); }
+</style>
+</head>
+<body>
+  <div class="awning"></div>
+  <div class="awning-edge"></div>
+
+  <div class="frame">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="7" fill="#28313D"/>
+        <path d="M5 6h22v5a3.67 3.67 0 0 1-7.33 0 3.67 3.67 0 0 1-7.34 0A3.67 3.67 0 0 1 5 11z" fill="#D2601A"/>
+        <g stroke-linecap="round">
+          <path d="M9.5 20h13" stroke="#F5F3EE" stroke-width="3"/>
+          <path d="M9.5 26h13" stroke="#D2601A" stroke-width="3"/>
+        </g>
+      </svg>
+      <span class="wordmark">stallpack <em>explained</em></span>
+    </div>
+
+    <div class="cols">
+      <div class="headline">
+        <h1>Two counts in.<br><span class="go">A reconciled day out.</span></h1>
+        <p>How the market stall &amp; craft fair inventory tracker turns morning and evening counts into sold, expected cash and variance.</p>
+      </div>
+      <div class="flow" aria-hidden="true">
+        <div class="fcard"><span class="k"><b>1</b> · Pack out</span><span class="v">carried 30</span></div>
+        <div class="arrow"></div>
+        <div class="fcard"><span class="k"><b>2</b> · Count back</span><span class="v">returned 12</span></div>
+        <div class="arrow"></div>
+        <div class="fcard verdict"><span class="k"><b>3</b> · Day sheet</span><span class="v">▼ short ₹140.00</span></div>
+      </div>
+    </div>
+
+    <div class="chips">
+      <span class="chip">animated walkthrough</span>
+      <span class="chip">try the arithmetic live</span>
+      <span class="chip hot">connect-src 'none'</span>
+      <span class="chip">free &amp; open source</span>
+    </div>
+  </div>
+</body>
+</html>
